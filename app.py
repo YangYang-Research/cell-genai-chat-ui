@@ -1,38 +1,82 @@
 import streamlit as st
 from helpers.config import AppConfig
+from helpers.auth import get_logout, get_user_info
+from helpers.loog import logger
 
+# ------------- Application Class -------------
 class App:
     def __init__(self):
         self.config = AppConfig()
 
-    def logout(self):
-        st.logout()
+    def _set_page_config(self):
+        st.set_page_config(
+            page_title=self.config.page_title,
+            page_icon=self.config.favicon_path,
+            layout="wide",
+        )
+    
+    def _set_header(self):
+        st.logo(self.config.logo_path, size="large", icon_image=self.config.logo_path)
+
+    def _init_session_state(self):
+        if "authentication_status" not in st.session_state:
+            st.session_state["authentication_status"] = None
+
+    def logout_page(self):
+        get_logout()
+        st.rerun()
 
     def run(self):
-        st.logo(self.config.logo_path, size="large", icon_image=self.config.logo_path)
+        self._set_page_config()
+        self._set_header()
+        self._init_session_state()
 
         st.set_page_config(
             page_title=self.config.page_title,
             page_icon=self.config.favicon_path,
             layout="wide",
         )
-        
-        pages = {
-            "Cell": [
-                st.Page("pages/home.py", title="Home", icon="⭐", url_path="/"),
-                st.Page("pages/agent.py", title="Cell Agent", icon="🔮", url_path="/cell-agent"),
-            ],
-            "Account": [
-                st.Page(self.logout, title="Logout", icon="🚪"),
-            ],
-        }
 
-        pg = st.navigation(pages, position="top")
+        # Define pages
+        home_page = st.Page("pages/home.py", title="Home", icon="⭐", url_path="/")
+        agent_page = st.Page("pages/agent.py", title="Cell Agent", icon="🔮", url_path="/cell-agent")
+        user_page = st.Page("pages/user.py", title="User", icon="👤", url_path="/user")
+
+        blank_page = st.Page("pages/blank.py", title="Blank", icon="📄", url_path="/blank")
+
+        login_page = st.Page("pages/login.py", title="Login", icon="🔐", url_path="/login")
+        logout_page = st.Page(self.logout_page, title="Logout", icon="🚪", url_path="/logout")
+
+        if st.session_state.get("authentication_status"):
+            user_info = get_user_info(extend_key="app")
+
+            pg = st.navigation({
+                "Cell": [home_page, agent_page],
+                "Account": [user_page, logout_page],
+                "Pages": [blank_page],
+            }, position="top")
+
+            with st.sidebar:
+                st.markdown("### User Info")
+                st.write(f"**Username:** {st.session_state.get('username')}")
+                st.write(f"**Role:** {st.session_state.get('roles')}")
+                st.markdown("---")
+        else:
+            pg = st.navigation({
+                "Account": [login_page]
+            })
+
         pg.run()
 
+# ------------- Main Execution -------------
 def main():
-    app = App()
-    app.run()
+    try:
+        app = App()
+        app.run()
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        st.error("An unexpected error occurred. Please refresh the page and try again.")
+        st.exception(e)
 
 if __name__ == "__main__":
     main()
