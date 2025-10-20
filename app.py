@@ -56,11 +56,6 @@ class App:
                 "Pages": [blank_page],
             }, position="top")
 
-            with st.sidebar:
-                st.markdown("### User Info")
-                st.write(f"**Username:** {st.session_state.get('username')}")
-                st.write(f"**Role:** {st.session_state.get('roles')}")
-                st.markdown("---")
         else:
             pg = st.navigation({
                 "Account": [login_page]

@@ -40,7 +40,7 @@ def setup_logging():
     logger = logging.getLogger('cell-genai-chat-ui')
     logger.setLevel(logging.INFO)
     formatter = CustomFormatter(json.dumps({'level': '%(levelname)s', 'msg': '%(message)s', 'time': '%(asctime)s'}))
-    handler = RotatingFileHandler('/var/log/cell-genai-chat-ui/app.log', maxBytes=int(config.log_max_size), backupCount=int(config.log_max_backups))
+    handler = RotatingFileHandler('/var/log/cell-genai-chat-ui/app.log', maxBytes=int(float(config.log_max_size)), backupCount=int(float(config.log_max_backups)))
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
