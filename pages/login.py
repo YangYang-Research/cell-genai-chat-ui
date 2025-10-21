@@ -20,18 +20,18 @@ authenticator = stauth.Authenticate(
 # ------------- Login Page Class -------------
 class LoginPage:
     def __init__(self):
-        self.config = AppConfig()
+        self.app_conf = AppConfig()
 
     def display(self):
-        st.logo(self.config.logo_path, size="large", icon_image=self.config.logo_path)
+        st.logo(self.app_conf.logo_path, size="large", icon_image=self.app_conf.logo_path)
 
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            base64_logo = base64.b64encode(open(self.config.logo_path, "rb").read()).decode("utf-8")
+            base64_logo = base64.b64encode(open(self.app_conf.logo_path, "rb").read()).decode("utf-8")
             st.markdown(
                 f"""
                 <div style="text-align: left;">
-                    <h2><img src="data:image/png;base64,{base64_logo}" alt="Logo" style="width: 100px;"/>{self.config.app_name}</h2>
+                    <h2><img src="data:image/png;base64,{base64_logo}" alt="Logo" style="width: 100px;"/>{self.app_conf.app_name}</h2>
                 </div>
                 """,
                 unsafe_allow_html=True,
