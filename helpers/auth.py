@@ -2,15 +2,19 @@ import streamlit as st
 import jwt
 from typing import Optional, Dict
 import extra_streamlit_components as stx
-from helpers.config import AppConfig
+from helpers.config import AppConfig, AWSConfig
+from helpers.secret import AWSSecretManager
 
-config = AppConfig()
-
+app_conf = AppConfig()
+aws_conf = AWSConfig()
+aws_secret_manager = AWSSecretManager(app_conf, aws_conf)
 cookie_manager = stx.CookieManager()
+
+jwt_secret_key = aws_secret_manager.get_secret(app_conf.jwt_key_name)
 
 def verify_jwt_cookie(jwt_cookie: str) -> Optional[Dict]:
     try:
-        payload = jwt.decode(jwt_cookie, "your_secret_key", algorithms=["HS256"])
+        payload = jwt.decode(jwt_cookie, jwt_secret_key, algorithms=["HS256"])
         return payload
     except jwt.ExpiredSignatureError:
         st.warning("Session expired. Please log in again.")
