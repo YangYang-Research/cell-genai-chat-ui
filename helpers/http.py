@@ -10,7 +10,7 @@ class CellHTTP:
         self.chat_conf = chat_conf
         self.aws_secret_manager = AWSSecretManager(app_conf, aws_conf)
 
-    def stream_chat_request(self, prompt, history):
+    def stream_chat_completions(self, prompt: str, history: dict):
         """
         Stream tokens from backend API (StreamingResponse).
         """
@@ -28,9 +28,9 @@ class CellHTTP:
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.aws_secret_manager.get_secret(self.chat_conf.chat_auth_key_name)}",
         }
-        print("DEBUG PAYLOAD:", payload)
+
         try:
-            with requests.post(self.chat_conf.chat_service_api+"chat/completions", headers=headers, json=payload, stream=True, timeout=self.chat_conf.chat_timeout_seconds) as r:
+            with requests.post(self.chat_conf.chat_service_api + self.chat_conf.chat_completions_endpoint, headers=headers, json=payload, stream=True, timeout=self.chat_conf.chat_timeout_seconds) as r:
                 r.raise_for_status()
                 for chunk in r.iter_content(chunk_size=None):
                     if chunk:
@@ -38,3 +38,20 @@ class CellHTTP:
         except requests.exceptions.RequestException as e:
             logger.error(f"[FE-CHAT_SERVICE] Stream error: {e}")
             yield f"\n[Error] Unable connect to chat service. Please try again."
+    
+    def post_request(self, endpoint: str, data: dict):
+        """
+        Send a POST request to the specified endpoint with the given data.
+        """
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.aws_secret_manager.get_secret(self.chat_conf.chat_auth_key_name)}",
+        }
+        try:
+            response = requests.post(self.chat_conf.chat_service_api + endpoint, headers=headers, json=data, timeout=self.chat_conf.chat_timeout_seconds)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            logger.error(f"[FE-CHAT_SERVICE] POST error: {e}")
+            yield f"\n[Error] Unable connect to chat service. Please try again."
+            
