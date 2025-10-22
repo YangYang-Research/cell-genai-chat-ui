@@ -1,7 +1,8 @@
-from dataclasses import dataclass
-from dotenv import load_dotenv
-from pathlib import Path
 import os
+from typing import List
+from pathlib import Path
+from dotenv import load_dotenv
+from dataclasses import dataclass
 
 load_dotenv()
 
@@ -12,12 +13,17 @@ class AppConfig(object):
     logo_path: Path = Path(__file__).parent.parent / "assets" / "logo-2.png"
     icon_path: Path = Path(__file__).parent.parent / "assets" / "logo.png"
     favicon_path: Path = Path(__file__).parent.parent / "assets" / "favicon.ico"
+    
     app_name: str = str(os.getenv("APP_NAME", "Cell"))
     page_title: str = str(os.getenv("PAGE_TITLE", "Cell - GenAI Chat UI"))
+    
     log_max_size: int = int(os.getenv("LOG_MAX_SIZE", "10000000"))  # in bytes
     log_max_backups: int = int(os.getenv("LOG_MAX_BACKUPS", "5"))  # number of backup files
-
+    
     jwt_key_name: str = os.getenv("JWT_KEY_NAME", "cell_jwt_secret_key")
+
+    allowed_file_types: List[str] = os.getenv("ALLOWED_FILE_TYPES", "txt,pdf,docx,png,jpg,jpeg,csv,xlsx").split(",")
+    max_upload_size_mb: int = int(os.getenv("MAX_UPLOAD_SIZE_MB", "10"))
 
 @dataclass
 class AWSConfig(object):
