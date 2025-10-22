@@ -83,7 +83,7 @@ class AgentPage:
                 )
 
         # Input box
-        if prompt := st.chat_input("Type your message here..."):
+        if prompt := st.chat_input("Type your message here...", accept_file="multiple", file_type=["txt", "pdf", "docx", "png", "jpg", "jpeg", "csv", "xlsx"]):
             msgs.add_user_message(prompt)
             st.chat_message("user").write(prompt)
 
