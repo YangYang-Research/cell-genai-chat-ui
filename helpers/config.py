@@ -3,6 +3,7 @@ from typing import List
 from pathlib import Path
 from dotenv import load_dotenv
 from dataclasses import dataclass
+from pydantic import Field
 
 load_dotenv()
 
@@ -22,7 +23,7 @@ class AppConfig(object):
     
     jwt_key_name: str = os.getenv("JWT_KEY_NAME", "cell_jwt_secret_key")
 
-    allowed_file_types: List[str] = os.getenv("ALLOWED_FILE_TYPES", "txt,pdf,docx,png,jpg,jpeg,csv,xlsx").split(",")
+    allowed_file_types: list[str] = Field(default_factory=lambda: os.getenv("ALLOWED_FILE_TYPES","txt,pdf,docx,png,jpg,jpeg,csv,xlsx").split(","))
     max_upload_size_mb: int = int(os.getenv("MAX_UPLOAD_SIZE_MB", "10"))
 
 @dataclass
