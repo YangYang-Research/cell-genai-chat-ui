@@ -10,19 +10,40 @@ class CellHTTP:
         self.chat_conf = chat_conf
         self.aws_secret_manager = AWSSecretManager(app_conf, aws_conf)
 
-    def stream_chat_completions(self, prompt: str, history: dict):
+    def stream_chat_completions(self, prompt: str, history: dict, attachments: list):
         """
         Stream tokens from backend API (StreamingResponse).
         """
+
+        messages = []
+        if self.chat_conf.chat_model_name == "claude":
+            # Convert chat history to Claude-compatible messages
+            messages = [
+                    {"role": "user" if m.type == "human" else "assistant", "content": m.content}
+                    for m in history.messages
+                ] + [{"role": "user", "content": prompt}]
+            
+            # if attachments:
+            #     for attachment in attachments:
+            #         if attachment.status == "completed":
+            #             if attachment.is_image and attachment.base64:
+
+            #             elif attachment.is_document and attachment.bytes:
+                            
+            #             elif attachment.is_text and attachment.content:
+
+            #             else:
+            #                 pass
+
+
         payload = {
             "model_id": self.chat_conf.chat_model_id,
             "temperature": self.chat_conf.temperature,
             "max_tokens": self.chat_conf.max_response_tokens,
-            "messages": [
-                {"role": "user" if m.type == "human" else "assistant", "content": m.content}
-                for m in history.messages
-            ] + [{"role": "user", "content": prompt}],
+            "messages": messages,
         }
+
+        print("DEBUG: ", payload)
 
         headers = {
             "Content-Type": "application/json",
