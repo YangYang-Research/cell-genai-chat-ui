@@ -30,6 +30,5 @@ class AWSSecretManager:
 
             return secret
         except ClientError as e:
-            print("DEBUG ERROR:", e)
             logger.error(f"[FE-AWS] Error retrieving secret {secret_key}: {e}")
             return None
