@@ -1,5 +1,6 @@
 import streamlit as st
 from helpers.loog import logger
+from helpers.utils import Utils
 from helpers.http import CellHTTP
 from helpers.config import AppConfig, AWSConfig, ChatConfig
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
@@ -8,6 +9,7 @@ app_config = AppConfig()
 aws_config = AWSConfig()
 chat_config = ChatConfig()
 cell_http = CellHTTP(app_config, aws_config, chat_config)
+utils = Utils()
 
 def init_feedback_state():
     """Initialize feedback tracking in session state."""
@@ -83,15 +85,35 @@ class AgentPage:
                 )
 
         # Input box
-        if prompt := st.chat_input("Type your message here...", accept_file="multiple", file_type=["txt", "pdf", "docx", "png", "jpg", "jpeg", "csv", "xlsx"]):
+        if message := st.chat_input("Type your message here...", accept_file="multiple", file_type=["txt", "pdf", "docx", "png", "jpg", "jpeg", "csv", "xlsx"]):
+
+            prompt = message["text"]
+            files = message["files"]
+            attachments = []
+            
+            if not prompt:
+                st.warning("Please enter a message.")
+                st.stop()
+            
+            if files:
+                attachments = utils.process_multiple_files(files)
+            
             msgs.add_user_message(prompt)
             st.chat_message("user").write(prompt)
+
+            if files:
+                for attachment in attachments:
+                    if attachment.is_image:
+                        st.image(image=attachment.bytes, width=100)
+                        st.write(f"Attachment: {attachment.name} - {attachment.size_kb} KB")
+                    else:
+                        st.write(f"Attachment: {attachment.name} - {attachment.size_kb} KB")
 
             # Stream AI response
             with st.chat_message("assistant"):
                 placeholder = st.empty()
                 full_response = ""
-                for chunk in cell_http.stream_chat_completions(prompt, msgs):
+                for chunk in cell_http.stream_chat_completions(prompt, msgs, attachments):
                     full_response += chunk
                     placeholder.markdown(full_response + "▌")
                 placeholder.markdown(full_response)
