@@ -21,7 +21,7 @@ class CellHTTP:
             messages = [
                     {"role": "user" if m.type == "human" else "assistant", "content": m.content}
                     for m in history.messages
-                ] + [{"role": "user", "content": prompt}]
+                ] # + [{"role": "user", "content": prompt}]
             
             # if attachments:
             #     for attachment in attachments:
@@ -35,15 +35,16 @@ class CellHTTP:
             #             else:
             #                 pass
 
+        if isinstance(messages, tuple):
+            messages = list(messages)
 
         payload = {
             "model_id": self.chat_conf.chat_model_id,
+            "model_name": self.chat_conf.chat_model_name,
             "temperature": self.chat_conf.temperature,
             "max_tokens": self.chat_conf.max_response_tokens,
             "messages": messages,
         }
-
-        print("DEBUG: ", payload)
 
         headers = {
             "Content-Type": "application/json",
@@ -51,7 +52,7 @@ class CellHTTP:
         }
 
         try:
-            with requests.post(self.chat_conf.chat_service_api + self.chat_conf.chat_completions_endpoint, headers=headers, json=payload, stream=True, timeout=self.chat_conf.chat_timeout_seconds) as r:
+            with requests.post(self.chat_conf.chat_service_api + self.chat_conf.chat_agent_completions_endpoint, headers=headers, json=payload, stream=True, timeout=self.chat_conf.chat_timeout_seconds) as r:
                 r.raise_for_status()
                 for chunk in r.iter_content(chunk_size=None):
                     if chunk:
