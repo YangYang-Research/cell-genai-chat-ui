@@ -53,7 +53,7 @@ class ChatConfig(object):
     top_p: float = float(os.getenv("TOP_P", "0.9"))
 
     """Chat service endpoint."""
-    chat_completions_endpoint: str = "chat/completions"
+    chat_agent_completions_endpoint: str = "chat/agent/completions"
     chat_feedback_endpoint: str = "chat/feedback"
 
 @dataclass
