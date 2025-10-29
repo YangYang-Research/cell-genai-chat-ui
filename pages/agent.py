@@ -5,16 +5,18 @@ from helpers.http import MakeRequest
 from helpers.config import AppConfig, AWSConfig, ChatConfig
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 
-app_config = AppConfig()
-aws_config = AWSConfig()
-chat_config = ChatConfig()
-make_request = MakeRequest(app_config, aws_config, chat_config)
+app_conf = AppConfig()
+aws_conf = AWSConfig()
+chat_conf = ChatConfig()
+make_request = MakeRequest(app_conf, aws_conf, chat_conf)
 utils = Utils()
 
-def init_feedback_state():
-    """Initialize feedback tracking in session state."""
+def init_session_state(default_model: str = "claude"):
+    """Initialize session state."""
     if "feedback" not in st.session_state:
         st.session_state.feedback = {}  # {message_index: "up"/"down"}
+    if "selected_model" not in st.session_state:
+        st.session_state.selected_model = default_model
 
 def save_feedback(message_index: int):
     """Save user feedback and send to backend."""
@@ -39,7 +41,7 @@ def save_feedback(message_index: int):
     try:
         if message_content:
             make_request.post(
-                endpoint=chat_config.chat_feedback_endpoint,
+                endpoint=chat_conf.chat_feedback_endpoint,
                 data={
                     "message_index": message_index,
                     "message_content": message_content,
@@ -51,16 +53,43 @@ def save_feedback(message_index: int):
     except Exception as e:
         logger.error(f"[Feedback] Failed to send feedback: {e}")
 
+def render_model_selector():
+    """Render model selector with session persistence."""
+
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
+
+    with col1:
+        options = chat_conf.chat_model_support
+
+        if st.session_state.selected_model not in options:
+            st.session_state.selected_model = options[0] if options else ""
+
+        selected_model = st.selectbox(
+            "Models",
+            options,
+            index=options.index(st.session_state.selected_model),
+            placeholder="Select model",
+            key="model_selector",
+        )
+
+        # Update session_state when user changes selection
+        if selected_model != st.session_state.selected_model:
+            st.session_state.selected_model = selected_model
+            st.toast(f"Model selected: {selected_model}", icon="✅")
+
+    return st.session_state.selected_model
+
 class AgentPage:
     def __init__(self):
         pass
-
+    
     def display(self):
         st.title("🔮 Cell")
         st.caption("Lightweight streaming GenAI chat powered by AWS Bedrock + LangChain")
+        
+        init_session_state(default_model="claude")
 
-        # Initialize feedback store
-        init_feedback_state()
+        chat_model = render_model_selector()
 
         msgs = StreamlitChatMessageHistory(key="chat_history")
 
@@ -101,7 +130,6 @@ class AgentPage:
             if files:
                 attachments = utils.process_multiple_files(files)
             
-            msgs.add_user_message(prompt)
             st.chat_message("user").write(prompt)
 
             if files:
@@ -116,7 +144,7 @@ class AgentPage:
             with st.chat_message("assistant"):
                 placeholder = st.empty()
                 full_response = ""
-                for chunk in make_request.stream_chat_completions(prompt, msgs, attachments):
+                for chunk in make_request.stream_chat_completions(chat_model, msgs, prompt, attachments):
                     full_response += chunk
                     placeholder.markdown(full_response + "▌")
                 placeholder.markdown(full_response)
