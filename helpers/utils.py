@@ -1,9 +1,10 @@
-from enum import Enum
+import re
 import base64
-from helpers.config import FileConfig
-from dataclasses import dataclass
+from enum import Enum
 from typing import Optional
 from helpers.loog import logger
+from dataclasses import dataclass
+from helpers.config import FileConfig
 
 class FileProcessStatus(Enum):
     PENDING = "pending"
@@ -88,7 +89,7 @@ class Utils:
             if self.is_allow_image_file(file):
                 attachment.base64 = base64.b64encode(file_content).decode('utf-8')
             elif self.is_allow_document_file(file):
-                pass
+                attachment.base64 = base64.b64encode(file_content).decode('utf-8')
             elif self.is_allow_text_file(file):
                 attachment.content = file_content.decode('utf-8')
             else:
@@ -131,3 +132,63 @@ class Utils:
     
     def is_allow_text_file(self, file) -> bool:
         return (file.type.startswith("text/") and file.name.split('.')[-1].lower() in self.file_conf.allowed_file_types)
+    
+    def get_file_format(value: str) -> str:
+        """
+        Map between file extensions and MIME types, both directions.
+        - Input a filename or extension (e.g., "file.pdf" or "pdf") → returns MIME type
+        - Input a MIME type (e.g., "application/pdf") → returns short format ("pdf")
+        """
+
+        value = value.strip().lower()
+
+        mime_map = {
+            "doc": "application/msword",
+            "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "xls": "application/vnd.ms-excel",
+            "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "csv": "text/csv",
+            "pdf": "application/pdf",
+            "txt": "text/plain",
+            "md": "text/markdown",
+            "html": "text/html",
+            "htm": "text/html",
+        }
+
+        # 🔁 Reverse map for quick lookup
+        ext_map = {v: k for k, v in mime_map.items()}
+
+        # Case 1: If it's a MIME type, return short format
+        if value in ext_map:
+            return ext_map[value]
+
+        # Case 2: If it's a filename or extension, return MIME type
+        if "." in value:
+            value = value.split(".")[-1]  # handle "file.pdf" case
+
+        return mime_map.get(value, "application/octet-stream")
+    
+    def format_filename(filename: str) -> str:
+        """
+        Sanitize and format a document file name.
+        Allowed:
+        - Alphanumeric (A–Z, a–z, 0–9)
+        - Whitespace
+        - Hyphens (-)
+        - Parentheses ((, ))
+        - Square brackets ([, ])
+        Rules:
+        - Remove disallowed characters
+        - Collapse multiple spaces into one
+        - Trim leading/trailing spaces
+        """
+        # Step 1: Remove disallowed characters
+        sanitized = re.sub(r"[^A-Za-z0-9\-\[\]\(\)\s]", "", filename)
+
+        # Step 2: Replace multiple spaces with a single space
+        sanitized = re.sub(r"\s{2,}", " ", sanitized)
+
+        # Step 3: Trim whitespace at start/end
+        sanitized = sanitized.strip()
+
+        return sanitized
