@@ -2,7 +2,7 @@ import os
 from typing import List
 from pathlib import Path
 from dotenv import load_dotenv
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pydantic import BaseModel, Field
 
 load_dotenv()
@@ -26,7 +26,7 @@ class AppConfig(object):
 class FileConfig(BaseModel):
     allowed_file_types: list[str] = Field(
         default_factory=lambda: os.getenv(
-            "ALLOWED_FILE_TYPES", "txt,pdf,docx,png,jpg,jpeg,csv,xlsx"
+            "ALLOWED_FILE_TYPES", "txt,html,md,pdf,docx,doc,png,jpg,jpeg,csv,xlsx,xls"
         ).split(",")
     )
     max_upload_size_mb: int = int(os.getenv("MAX_UPLOAD_SIZE_MB", "10"))
@@ -46,8 +46,7 @@ class ChatConfig(object):
     chat_service_api: str = os.getenv("CHAT_SERVICE_API", "http://localhost:8000/v1/")
     chat_auth_key_name: str = os.getenv("CHAT_SERVICE_AUTH_KEY_NAME", "cell_auth_key")
     chat_timeout_seconds: int = int(os.getenv("CHAT_SERVICE_TIMEOUT_SECONDS", "300"))
-    chat_model_name: str = os.getenv("CHAT_MODEL_NAME", "claude")
-    chat_model_id: str = os.getenv("CHAT_MODEL_INFERENCE_PROFILE_ID", "apac.anthropic.claude-sonnet-4-20250514-v1:0")
+    chat_model_support: List[str] = field(default_factory=lambda: ["claude", "llama", "gpt-oss"])
     max_response_tokens: int = int(os.getenv("MAX_RESPONSE_TOKENS", "512"))
     temperature: float = float(os.getenv("TEMPERATURE", "0.7"))
     top_p: float = float(os.getenv("TOP_P", "0.9"))
