@@ -1,14 +1,14 @@
 import streamlit as st
 from helpers.loog import logger
 from helpers.utils import Utils
-from helpers.http import CellHTTP
+from helpers.http import MakeRequest
 from helpers.config import AppConfig, AWSConfig, ChatConfig
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 
 app_config = AppConfig()
 aws_config = AWSConfig()
 chat_config = ChatConfig()
-cell_http = CellHTTP(app_config, aws_config, chat_config)
+make_request = MakeRequest(app_config, aws_config, chat_config)
 utils = Utils()
 
 def init_feedback_state():
@@ -38,7 +38,7 @@ def save_feedback(message_index: int):
     logger.info(f"[Feedback] Message {message_index} => {user_feedback}")
     try:
         if message_content:
-            cell_http.post_request(
+            make_request.post(
                 endpoint=chat_config.chat_feedback_endpoint,
                 data={
                     "message_index": message_index,
@@ -70,19 +70,22 @@ class AgentPage:
         # Display chat history
         for idx, msg in enumerate(msgs.messages):
             role = "assistant" if msg.type == "ai" else "user"
-            st.chat_message(role).write(msg.content)
 
-            # Feedback for assistant messages only
-            if role == "assistant":
-                existing_feedback = st.session_state.feedback.get(idx)
-                st.session_state[f"feedback_{idx}"] = existing_feedback
-                st.feedback(
-                    "thumbs",
-                    key=f"feedback_{idx}",
-                    disabled=existing_feedback is not None,
-                    on_change=save_feedback,
-                    args=[idx],
-                )
+            if role == "user":
+                st.chat_message("user").write(msg.content)
+            else:
+                # Feedback for assistant messages only
+                with st.chat_message("assistant"):
+                    st.write(msg.content)
+                    existing_feedback = st.session_state.feedback.get(idx)
+                    st.session_state[f"feedback_{idx}"] = existing_feedback
+                    st.feedback(
+                        "thumbs",
+                        key=f"feedback_{idx}",
+                        disabled=existing_feedback is not None,
+                        on_change=save_feedback,
+                        args=[idx],
+                    )
 
         # Input box
         if message := st.chat_input("Type your message here...", accept_file="multiple", file_type=["txt", "pdf", "docx", "png", "jpg", "jpeg", "csv", "xlsx"]):
@@ -113,7 +116,7 @@ class AgentPage:
             with st.chat_message("assistant"):
                 placeholder = st.empty()
                 full_response = ""
-                for chunk in cell_http.stream_chat_completions(prompt, msgs, attachments):
+                for chunk in make_request.stream_chat_completions(prompt, msgs, attachments):
                     full_response += chunk
                     placeholder.markdown(full_response + "▌")
                 placeholder.markdown(full_response)

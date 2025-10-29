@@ -3,7 +3,7 @@ from helpers.config import AppConfig, AWSConfig, ChatConfig
 from helpers.secret import AWSSecretManager
 from helpers.loog import logger
 
-class CellHTTP:
+class MakeRequest(object):
     def __init__(self, app_conf: AppConfig, aws_conf: AWSConfig, chat_conf: ChatConfig):
         self.app_conf = app_conf
         self.aws_conf = aws_conf
@@ -61,7 +61,7 @@ class CellHTTP:
             logger.error(f"[FE-CHAT_SERVICE] Stream error: {e}")
             yield f"\n[Error] Unable connect to chat service. Please try again."
     
-    def post_request(self, endpoint: str, data: dict):
+    def post(self, endpoint: str, data: dict):
         """
         Send a POST request to the specified endpoint with the given data.
         """
