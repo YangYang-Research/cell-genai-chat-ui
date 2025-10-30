@@ -16,6 +16,7 @@ class AppConfig(object):
     favicon_path: Path = Path(__file__).parent.parent / "assets" / "favicon.ico"
     
     app_name: str = str(os.getenv("APP_NAME", "Cell"))
+    agent_name: str = str(os.getenv("AGENT_NAME", "Cell Agent"))
     page_title: str = str(os.getenv("PAGE_TITLE", "Cell - GenAI Chat UI"))
     
     log_max_size: int = int(os.getenv("LOG_MAX_SIZE", "10000000"))  # in bytes
