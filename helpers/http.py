@@ -88,6 +88,12 @@ class MakeRequest(object):
                             pass
             else:
                 messages = messages + [{"role": "user", "content": prompt}]
+        elif chat_model == "llama":
+            st.toast(f"Model : {chat_model} currently not supported", icon="⚠️")
+            st.stop()
+        elif chat_model == "gpt-oss":
+            st.toast(f"Model : {chat_model} currently not supported", icon="⚠️")
+            st.stop()
         else:
             st.toast(f"Model : {chat_model} currently not supported", icon="⚠️")
             st.stop()
