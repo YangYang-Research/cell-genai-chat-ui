@@ -1,3 +1,4 @@
+import base64
 import streamlit as st
 from helpers.loog import logger
 from helpers.utils import Utils
@@ -84,8 +85,7 @@ class AgentPage:
         pass
     
     def display(self):
-        st.title("🔮 Cell")
-        st.caption("Lightweight streaming GenAI chat powered by AWS Bedrock + LangChain")
+        st.markdown("## 💬 Cell Agent")
         
         init_session_state(default_model="claude")
 

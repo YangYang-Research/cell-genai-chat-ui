@@ -101,8 +101,10 @@ class MakeRequest(object):
         if isinstance(messages, tuple):
             messages = list(messages)
 
+        chat_session = st.session_state.get("chat_session_id")
+
         payload = {
-            "chat_session_id": "123",
+            "chat_session_id": str(chat_session),
             "model_name": chat_model,
             "messages": messages,
         }

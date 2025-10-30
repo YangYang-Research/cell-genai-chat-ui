@@ -1,3 +1,4 @@
+import uuid
 import streamlit as st
 from helpers.config import AppConfig
 from helpers.auth import get_logout, get_user_info
@@ -21,6 +22,8 @@ class App:
     def _init_session_state(self):
         if "authentication_status" not in st.session_state:
             st.session_state["authentication_status"] = None
+        if "chat_session_id" not in st.session_state:
+            st.session_state["chat_session_id"] = None
 
     def logout_page(self):
         get_logout()
@@ -38,8 +41,8 @@ class App:
         )
 
         # Define pages
-        home_page = st.Page("pages/home.py", title="Home", icon="⭐", url_path="/")
-        agent_page = st.Page("pages/agent.py", title="Cell Agent", icon="🔮", url_path="/cell-agent")
+        home_page = st.Page("pages/home.py", title="Home", icon="🚀", url_path="/")
+        agent_page = st.Page("pages/agent.py", title="Cell Agent", icon="💬", url_path="/cell-agent")
         user_page = st.Page("pages/user.py", title="User", icon="👤", url_path="/user")
 
         blank_page = st.Page("pages/blank.py", title="Blank", icon="📄", url_path="/blank")
@@ -49,6 +52,9 @@ class App:
 
         if st.session_state.get("authentication_status"):
             user_info = get_user_info(extend_key="app")
+
+            if st.session_state.get("chat_session_id") is None:
+                st.session_state["chat_session_id"] = uuid.uuid1()
 
             pg = st.navigation({
                 "Cell": [home_page, agent_page],

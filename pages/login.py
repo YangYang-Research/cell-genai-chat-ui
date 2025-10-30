@@ -1,4 +1,5 @@
 import streamlit as st
+import uuid
 import base64
 import yaml
 from yaml.loader import SafeLoader
@@ -41,6 +42,7 @@ class LoginPage:
 
             if st.session_state.get("authentication_status"):
                 st.success("Login successful!")
+                st.session_state["chat_session_id"] = uuid.uuid1()
                 st.rerun()
             elif st.session_state.get("authentication_status") is False:
                 st.error("Username/password is incorrect")
